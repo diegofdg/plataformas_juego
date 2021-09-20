@@ -28,13 +28,14 @@ var jugador = function(){
     this.y = 100;
 
     this.vy = 0;
-    this.vh = 0;
+    this.vx = 0;
 
     this.gravedad = 0.5;
     this.friccion = 0.1;
 
     this.salto = 10;
-    this.velocidad = 0;
+    this.velocidad = 3;
+    this.velocidadMaxima = 15;
 
     this.suelo = false;
 
@@ -55,6 +56,30 @@ var jugador = function(){
             this.vy += this.gravedad;
         }
 
+        if(this.pulsaDerecha === true && this.vx <= this.velocidadMaxima){
+            this.vx += this.velocidad;
+        }
+
+        if(this.pulsaIzquierda === true && this.vx >= (0 - this.velocidadMaxima)){
+            this.vx -= this.velocidad;
+        }
+
+        if(this.vx > 0){
+            this.vx -= this.friccion;
+
+            if(this.vx < 0){
+                this.vx = 0;
+            }
+        }
+
+        if(this.vx < 0){
+            this.vx += this.friccion;
+
+            if(this.vx > 0){
+                this.vx = 0;
+            }
+        }
+
         if(this.vy > 0){
             if(this.colision(this.x, this.y + altoF) === true){
                 this.suelo = true;
@@ -63,6 +88,7 @@ var jugador = function(){
         }
 
         this.y += this.vy;
+        this.x += this.vx;
     }
 
     this.dibuja = function(){
@@ -77,6 +103,22 @@ var jugador = function(){
             this.vy -= this.salto;
             this.suelo =false;
         }
+    }
+
+    this.derecha = function(){                
+        this.pulsaDerecha = true;
+    }
+
+    this.izquierda = function(){
+        this.pulsaIzquierda = true;
+    }
+
+    this.sueltaDerecha = function(){
+        this.pulsaDerecha = false;
+    }
+    
+    this.sueltaIzquierda = function(){
+        this.pulsaIzquierda = false;
     }
 }
 
@@ -117,18 +159,22 @@ function inicializa(){
             console.log('abajo');
         }
         if(tecla.key === 'ArrowLeft'){
+            protagonista.izquierda();
             console.log('pulsa izquierda');
         }
         if(tecla.key === 'ArrowRight'){
-            console.log('pulsa derecha');
+            protagonista.derecha();
+            
         }
     });
 
     document.addEventListener('keyup', function(tecla){        
         if(tecla.key === 'ArrowLeft'){
+            protagonista.sueltaIzquierda();
             console.log('suelta izquierda');
         }
         if(tecla.key === 'ArrowRight'){
+            protagonista.sueltaDerecha();
             console.log('suelta derecha');
         }
     });
