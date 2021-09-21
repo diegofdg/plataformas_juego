@@ -24,8 +24,8 @@ var escenario = [
 ];
 
 var jugador = function(){
-    this.x = 100;
-    this.y = 100;
+    this.x = 70;
+    this.y = 70;
 
     this.vy = 0;
     this.vx = 0;
@@ -34,26 +34,35 @@ var jugador = function(){
     this.friccion = 0.1;
 
     this.salto = 10;
-    this.velocidad = 3;
-    this.velocidadMaxima = 15;
+    this.velocidad = 2;
+    this.velocidadMaxima = 3;
 
     this.suelo = false;
 
     this.pulsaIzquierda = false;
-    this.pulsaDerecha = false;
+    this.pulsaDerecha = false;    
 
-    this.colision = function(x,y){
-        var colisiona = false;
-
-        if(escenario[(parseInt(this.y/altoF))][(parseInt(this.x/anchoF))]===0){
-            colisiona = true;
+    this.correccion = function(lugar){
+        if(lugar === 1){
+            this.y = (parseInt(this.y/altoF))*altoF;
         }
-        return colisiona;
+        if(lugar === 2){
+            this.y = (parseInt(this.y/altoF)+1)*altoF;
+        }
+        if(lugar === 3){
+            this.x = (parseInt(this.x/anchoF))*anchoF;
+        }
+        if(lugar === 4){
+            this.x = (parseInt(this.x/anchoF)+1)*anchoF
+        }
     }
 
     this.fisica = function(){
         if(this.suelo === false){
             this.vy += this.gravedad;
+        } else {
+            this.correccion(1);
+            this.vy = 0;
         }
 
         if(this.pulsaDerecha === true && this.vx <= this.velocidadMaxima){
@@ -80,15 +89,30 @@ var jugador = function(){
             }
         }
 
-        if(this.vy > 0){
-            if(this.colision(this.x, this.y + altoF) === true){
-                this.suelo = true;
-                this.vy = 0;
-            }
+        if(this.vx > 0 && this.colision(this.x + anchoF + this.vx,(this.y + parseInt(altoF/2)))==true){
+            if(this.x != parseInt(this.x/anchoF)*anchoF){
+              this.correccion(4);
+            }      
+            this.vx = 0;
+        }      
+        if(this.vx < 0 && this.colision(this.x + this.vx,(this.y+ parseInt(altoF/2)))==true){
+            this.correccion(3);
+            this.vx = 0;
         }
 
         this.y += this.vy;
         this.x += this.vx;
+
+        if(this.colision((this.x + (parseInt(anchoF/2))),(this.y + altoF))==true){
+            this.suelo = true;
+        } else{
+            this.suelo = false;
+        }
+      
+        if(this.colision((this.x+ (parseInt(anchoF/2))), this.y)){
+            this.correccion(2);
+            this.vy = 0;
+        }        
     }
 
     this.dibuja = function(){
@@ -96,6 +120,15 @@ var jugador = function(){
 
         ctx.fillStyle = '#820c01';
         ctx.fillRect(this.x, this.y, anchoF, altoF);
+    }
+
+    this.colision = function(x,y){
+        var colisiona = false;
+
+        if(escenario[(parseInt(y/altoF))][(parseInt(x/anchoF))]===0){
+            colisiona = true;
+        }
+        return colisiona;
     }
 
     this.arriba = function(){
@@ -119,7 +152,7 @@ var jugador = function(){
     
     this.sueltaIzquierda = function(){
         this.pulsaIzquierda = false;
-    }
+    }       
 }
 
 function dibujaEscenario(){
