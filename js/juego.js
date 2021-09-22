@@ -40,7 +40,9 @@ var jugador = function(){
     this.suelo = false;
 
     this.pulsaIzquierda = false;
-    this.pulsaDerecha = false;    
+    this.pulsaDerecha = false;   
+    
+    this.durezaRebote = 100;
 
     this.correccion = function(lugar){
         if(lugar === 1){
@@ -62,7 +64,8 @@ var jugador = function(){
             this.vy += this.gravedad;
         } else {
             this.correccion(1);
-            this.vy = 0;
+            var rebote = parseInt(this.vy/this.durezaRebote);
+            this.vy = 0 - rebote;
         }
 
         if(this.pulsaDerecha === true && this.vx <= this.velocidadMaxima){
@@ -89,30 +92,36 @@ var jugador = function(){
             }
         }
 
-        if(this.vx > 0 && this.colision(this.x + anchoF + this.vx,(this.y + parseInt(altoF/2)))==true){
-            if(this.x != parseInt(this.x/anchoF)*anchoF){
-              this.correccion(4);
-            }      
-            this.vx = 0;
-        }      
-        if(this.vx < 0 && this.colision(this.x + this.vx,(this.y+ parseInt(altoF/2)))==true){
-            this.correccion(3);
-            this.vx = 0;
+        if(this.vx > 0){
+            if(this.colision(this.x + anchoF + this.vx,(this.y + 1))==true || this.colision(this.x + anchoF + this.vx,(this.y + altoF - 1))==true){
+                if(this.x != parseInt(this.x/anchoF)*anchoF){
+                    this.correccion(4)
+                }      
+                this.vx = 0;
+            }
+        }
+        if(this.vx < 0){
+            if(this.colision(this.x + this.vx,(this.y+ 1))==true || this.colision(this.x + this.vx,(this.y+ + altoF - 1))==true){
+                this.correccion(3)
+                this.vx = 0;
+            }
         }
 
         this.y += this.vy;
         this.x += this.vx;
 
-        if(this.colision((this.x + (parseInt(anchoF/2))),(this.y + altoF))==true){
-            this.suelo = true;
-        } else{
-            this.suelo = false;
+        if(this.vy >= 0){
+            if((this.colision((this.x + 1),(this.y + altoF))==true) || (this.colision((this.x + anchoF - 1),(this.y + altoF))==true)){
+                this.suelo = true;
+            } else{
+                this.suelo = false;
+            }
         }
       
-        if(this.colision((this.x+ (parseInt(anchoF/2))), this.y)){
+        if((this.colision((this.x + 1), this.y) == true) || (this.colision((this.x + anchoF - 1), this.y) == true)){
             this.correccion(2);
-            this.vy = 0;
-        }        
+            this.vy = 0;      
+        }
     }
 
     this.dibuja = function(){
@@ -152,7 +161,26 @@ var jugador = function(){
     
     this.sueltaIzquierda = function(){
         this.pulsaIzquierda = false;
-    }       
+    } 
+    
+    this.creaBloque = function(x,y){
+        xBloque = parseInt(x/anchoF);
+        yBloque = parseInt(y/altoF);
+        colorBloque = escenario[yBloque][xBloque];
+      
+        if(colorBloque == 0){
+            colorBloque = 2;
+        } else {
+            colorBloque = 0;
+        }
+      
+        escenario[yBloque][xBloque] = colorBloque;      
+    }
+    
+    this.previewBloque = function(){
+        ctx.fillStyle = '#666666';
+        ctx.fillRect(parseInt(ratonX/anchoF)*anchoF,parseInt(ratonY/altoF)*altoF,anchoF,altoF);
+    }
 }
 
 function dibujaEscenario(){
@@ -172,6 +200,22 @@ function dibujaEscenario(){
     }    
 }
 
+var ratonX = 0;
+var ratonY = 0;
+
+function clicRaton(e){
+    console.log('raton pulsado');
+}
+
+function sueltaRaton(e){
+    protagonista.creaBloque(ratonX,ratonY);
+}
+
+function posicionRaton(e){
+    ratonX = e.pageX;
+    ratonY = e.pageY;
+}
+
 function borraCanvas(){
     canvas.width = 750;
     canvas.height = 500;    
@@ -183,32 +227,30 @@ function inicializa(){
 
     protagonista = new jugador();
 
+    canvas.addEventListener('mousedown',clicRaton,false);
+    canvas.addEventListener('mouseup',sueltaRaton,false);
+    canvas.addEventListener('mousemove',posicionRaton,false);
+
     document.addEventListener('keydown', function(tecla){
         if(tecla.key === 'ArrowUp'){
-            protagonista.arriba();
-            console.log('arriba');
+            protagonista.arriba();            
         }
-        if(tecla.key === 'ArrowDown'){
-            console.log('abajo');
-        }
+
         if(tecla.key === 'ArrowLeft'){
-            protagonista.izquierda();
-            console.log('pulsa izquierda');
+            protagonista.izquierda();        
         }
+
         if(tecla.key === 'ArrowRight'){
-            protagonista.derecha();
-            
+            protagonista.derecha();            
         }
     });
 
     document.addEventListener('keyup', function(tecla){        
         if(tecla.key === 'ArrowLeft'){
-            protagonista.sueltaIzquierda();
-            console.log('suelta izquierda');
+            protagonista.sueltaIzquierda();            
         }
         if(tecla.key === 'ArrowRight'){
-            protagonista.sueltaDerecha();
-            console.log('suelta derecha');
+            protagonista.sueltaDerecha();            
         }
     });
 
@@ -220,5 +262,6 @@ function inicializa(){
 function principal(){    
     borraCanvas();  
     dibujaEscenario();
+    protagonista.previewBloque();
     protagonista.dibuja();    
 }
